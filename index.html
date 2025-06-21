@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QR受付スキャン</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    #reader {
+      width: 100%;
+      max-width: 360px;
+      margin-bottom: 20px;
+    }
+    #result {
+      font-size: 18px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      background-color: #ffffff;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+      text-align: center;
+      min-height: 48px;
+    }
+  </style>
+</head>
+<body>
+  <h1>QR受付スキャン</h1>
+  <div id="reader"></div>
+  <div id="result">QRコードをスキャンしてください</div>
+
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwQFMDtS7Z9QAVE9862h3SW_sspakZdiP_XcaUvSnoit9FhgHJcX_dgT1-9M-Vwc40/exec";
+
+    function onScanSuccess(qrCodeMessage) {
+      // ID取得
+      const url = new URL(qrCodeMessage);
+      const id = url.searchParams.get("id");
+
+      if (!id) {
+        document.getElementById("result").textContent = "❌ 無効なQRコードです";
+        return;
+      }
+
+      document.getElementById("result").textContent = "⏳ 確認中...";
+
+      fetch(`${GAS_URL}?id=${encodeURIComponent(id)}`)
+        .then(res => res.text())
+        .then(text => {
+          document.getElementById("result").textContent = text;
+        })
+        .catch(err => {
+          document.getElementById("result").textContent = "⚠️ エラーが発生しました";
+        });
+    }
+
+    const html5QrCode = new Html5Qrcode("reader");
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        html5QrCode.start(
+          { facingMode: "environment" }, // 背面カメラ優先
+          { fps: 10, qrbox: 250 },
+          onScanSuccess
+        );
+      } else {
+        document.getElementById("result").textContent = "📷 カメラが見つかりません";
+      }
+    }).catch(err => {
+      document.getElementById("result").textContent = "📵 カメラ起動に失敗しました";
+    });
+  </script>
+</body>
+</html>
