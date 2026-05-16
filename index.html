@@ -2,49 +2,95 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>PTA受付スキャナー</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>修道5-1 懇親会受付</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    body { background-color: #f4f6f9; padding-top: 20px; }
-    #reader { width: 100%; max-width: 450px; margin: 0 auto; border: none !important; border-radius: 12px; overflow: hidden; }
-    .status-container { max-width: 450px; margin: 20px auto; padding: 15px; text-align: center; color: #666; }
+    body { 
+      background-color: #f4f6f9; 
+      padding-top: 10px;
+      -webkit-user-select: none; /* 誤操作によるテキスト選択を防止 */
+      user-select: none;
+    }
+    /* スキャナーエリアをスマホの画面幅に合わせて丸角・影付きに */
+    #reader { 
+      width: 100%; 
+      max-width: 450px; 
+      margin: 0 auto; 
+      border: none !important; 
+      border-radius: 16px; 
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    /* カメラ映像内の不要なボタンや文言を非表示にする（html5-qrcodeの微調整） */
+    #reader img { display: none !important; }
+    #reader __dashboard { padding: 10px !important; }
+    
+    .status-container { 
+      max-width: 450px; 
+      margin: 15px auto; 
+      padding: 12px; 
+      text-align: center; 
+      background: #fff;
+      border-radius: 30px;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    /* モーダルのボタンを親指で押しやすいサイズに */
+    .btn-massive {
+      padding: 16px !important;
+      font-size: 1.2rem !important;
+      border-radius: 12px;
+    }
+    /* スマホ用の大きいトグルスイッチ */
+    .form-switch .form-check-input {
+      width: 3em !important;
+      height: 1.6em !important;
+      margin-left: -3.5em !important;
+    }
+    .form-switch .form-check-label {
+      padding-left: 0.5em;
+      padding-top: 0.2em;
+      font-size: 1.1rem;
+    }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="text-center mb-3">
-    <h3 class="fw-bold text-secondary">懇親会 受付スキャナー</h3>
-    <p class="text-muted small">QRコードをカメラにかざしてください (GitHub Pages版)</p>
+<div class="container px-3">
+  <div class="text-center mb-2">
+    <h4 class="fw-bold text-dark mt-2">懇親会 受付スキャナー</h4>
+    <p class="text-muted small mb-2">QRコードをカメラにかざしてください</p>
   </div>
   
-  <div id="reader" class="shadow-sm"></div>
+  <div id="reader"></div>
   
-  <div class="status-container">
-    <div id="loading" style="display:none;" class="spinner-border spinner-border-sm text-primary" role="status"></div>
-    <span id="scan-status">スキャン待機中...</span>
+  <div class="status-container text-secondary">
+    <div id="loading" style="display:none;" class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+    <span id="scan-status">カメラ起動中...</span>
   </div>
 </div>
 
 <div class="modal fade" id="resultModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content shadow-lg">
-      <div class="modal-header bg-light">
-        <h5 class="modal-title fw-bold" id="modalName">保護者様</h5>
+  <div class="modal-dialog modal-dialog-centered modal-sm px-4">
+    <div class="modal-content style-modal" style="border-radius: 20px; border: none;">
+      <div class="modal-header bg-light" style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
+        <h5 class="modal-title fw-bold text-truncate" id="modalName">保護者様</h5>
       </div>
-      <div class="modal-body">
-        <p class="mb-3">現在の状態: <span id="modalCurrentStatus" class="fw-bold"></span></p>
-        <div class="form-check form-switch p-3 bg-light rounded border">
-          <input class="form-check-input" type="checkbox" id="collectMoneyCheck" style="transform: scale(1.3); margin-left: -1.5em;">
-          <label class="form-check-label fw-bold text-primary" for="collectMoneyCheck" style="margin-left: 0.5em;">
+      <div class="modal-body p-4">
+        <p class="mb-4 fs-5 text-center">状態: <span id="modalCurrentStatus"></span></p>
+        
+        <div class="form-check form-switch d-flex align-items-center justify-content-center p-3 bg-light rounded-3 border">
+          <input class="form-check-input" type="checkbox" id="collectMoneyCheck">
+          <label class="form-check-label fw-bold text-primary" for="collectMoneyCheck">
             ここで会費を集金する
           </label>
         </div>
       </div>
-      <div class="modal-footer flex-column">
-        <button type="button" class="btn btn-success w-100 fs-5 fw-bold py-2" id="btnSubmit">受付を確定する</button>
-        <button type="button" class="btn btn-sm btn-link text-secondary mt-1" id="btnCancel">キャンセル</button>
+      <div class="modal-footer flex-column p-3 border-0">
+        <button type="button" class="btn btn-success w-100 btn-massive fw-bold shadow-sm" id="btnSubmit">受付を確定する</button>
+        <button type="button" class="btn btn-link text-secondary mt-2 py-2" id="btnCancel">キャンセル</button>
       </div>
     </div>
   </div>
@@ -53,8 +99,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // ★ここに新しいGASのウェブアプリURLを貼り付けてください
-  const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzb7FM6P-syToi_V7zdM-EJUcy6tFXGDPbn7yt6dYbNPG18sOhn4cFINtVz3PbSbKqx0A/exec';
+  // ★ここにGASのウェブアプリURLを貼り付けてください
+  const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/XXXXX/exec';
 
   let html5QrcodeScanner;
   let isProcessing = false;
@@ -65,11 +111,12 @@
     if (isProcessing) return; 
     isProcessing = true;
     
-    playBeep(880, 0.1);
+    playBeep(880, 0.08); // スキャン音（短く小気味よく）
+    
     document.getElementById('loading').style.display = 'inline-block';
     document.getElementById('scan-status').innerText = ' データ照合中...';
+    document.getElementById('scan-status').className = 'text-primary fw-bold';
 
-    // GitHub PagesからGAS APIへフェッチ
     fetch(GAS_WEB_APP_URL, {
       method: "POST",
       body: JSON.stringify({ action: "getUserData", id: decodedText })
@@ -79,22 +126,23 @@
       document.getElementById('loading').style.display = 'none';
       if (response.success && response.data) {
         const userData = response.data;
-        document.getElementById('modalName').innerText = userData.name + " の保護者様";
+        document.getElementById('modalName').innerText = userData.name + " 様";
         document.getElementById('modalCurrentStatus').innerText = userData.status;
         
         if (userData.status.includes("済")) {
-          document.getElementById('modalCurrentStatus').className = "text-success fw-bold";
+          document.getElementById('modalCurrentStatus').className = "text-success fw-bold fs-4";
           document.getElementById('collectMoneyCheck').checked = userData.status.includes("集金有");
         } else {
-          document.getElementById('modalCurrentStatus').className = "text-danger fw-bold";
-          document.getElementById('collectMoneyCheck').checked = true;
+          document.getElementById('modalCurrentStatus').className = "text-danger fw-bold fs-4";
+          document.getElementById('collectMoneyCheck').checked = true; // 未受付ならデフォルトで集金ON
         }
         
         currentTargetRow = userData.rowIndex;
-        document.getElementById('scan-status').innerText = 'スキャン一時停止中';
+        document.getElementById('scan-status').innerText = '確認中...';
+        document.getElementById('scan-status').className = 'text-warning';
         bsModal.show();
       } else {
-        alert("エラー: 該当するIDが見つかりません。");
+        alert("エラー: 登録情報が見つかりません。");
         resetScanner();
       }
     })
@@ -107,7 +155,8 @@
 
   document.getElementById('btnSubmit').addEventListener('click', () => {
     const isPaid = document.getElementById('collectMoneyCheck').checked;
-    document.getElementById('scan-status').innerText = ' 更新中...';
+    document.getElementById('scan-status').innerText = ' スプレッドシート更新中...';
+    document.getElementById('scan-status').className = 'text-primary';
     bsModal.hide();
     
     fetch(GAS_WEB_APP_URL, {
@@ -117,9 +166,9 @@
     .then(res => res.json())
     .then(response => {
       if(response.success) {
-        playBeep(1200, 0.2);
+        playBeep(1200, 0.15); // 成功音
       } else {
-        alert("更新に失敗しました");
+        alert("スプシの更新に失敗しました");
       }
       resetScanner();
     })
@@ -136,6 +185,7 @@
 
   function resetScanner() {
     document.getElementById('scan-status').innerText = 'QRコードをかざしてください';
+    document.getElementById('scan-status').className = 'text-secondary';
     currentTargetRow = null;
     isProcessing = false;
   }
@@ -152,12 +202,24 @@
   }
 
   window.addEventListener('DOMContentLoaded', () => {
+    // スマホ対応設定: 背面カメラ(environment)を最優先、インカメラ(user)を禁止
     html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-      fps: 10, 
-      qrbox: { width: 250, height: 250 },
-      rememberLastUsedCamera: true
+      fps: 15, // 認識速度を上げるため少しアップ
+      qrbox: { width: 220, height: 220 },
+      experimentalFeatures: {
+        useBarCodeDetectorIfSupported: true
+      },
+      rememberLastUsedCamera: true,
+      supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
     });
+    
+    // 背面カメラで起動を試みる
     html5QrcodeScanner.render(onScanSuccess);
+    
+    // 起動完了後の文言変更
+    setTimeout(() => {
+      resetScanner();
+    }, 2000);
   });
 </script>
 
